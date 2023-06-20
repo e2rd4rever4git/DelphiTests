@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<its:machine xmlns:its="http://its.ru/xmlns/its" ver="3" trialdays="30" key="67D90F8103D0FDDC7476814FDE08DA3C">
+	<its:descr name="foo_machine"/>
+	<!--DataToFile Записывает данные в файл (используется для отладки) Записывает в папку логов-->
+	<!--У тригеров есть переменная Value со значением тэга на момент вызова триггера
+вызов тригера происходит при чтение значения если значение отличается от предыдущего (даже чут-чуть :))).
+Отслеживание тригера прекращается на время выполнения кода тригера.
+Будьте осторожны!
+Рекомендуется использовать только с булевскими тригерами!-->
+	<its:options>
+		<its:mesgroup name="time">
+			<its:mes base="1">milli&amp;sec</its:mes>
+			<its:mes>&amp;time</its:mes>
+			<its:mes>&amp;time+ms</its:mes>
+		</its:mesgroup>
+		<its:mesgroup name="force">
+			<its:mes base="1">&amp;N</its:mes>
+			<its:mes>mega&amp;N</its:mes>
+			<its:mes>kilo&amp;N</its:mes>
+		</its:mesgroup>
+		<its:mesgroup name="len">
+			<its:mes base="1">&amp;m</its:mes>
+			<its:mes>centi&amp;m</its:mes>
+			<its:mes>milli&amp;m</its:mes>
+		</its:mesgroup>
+	</its:options>
+	<!--если value нет или 1 - шаги игнорируются
+если value больше 1 то шаги считаются между каждым отдельно
+для булевского и строкового типа шаги и value игнорируются-->
+	<its:param name="PARAM0" disp="Задатчик" type="float" default="100" steps="5">
+		<its:value>1</its:value>
+		<its:value>50</its:value>
+		<its:value>100</its:value>
+		<its:value>200</its:value>
+	</its:param>
+	<its:hardware>
+		<its:device name="TCP_EMULATOR" num="localhost">
+			<its:tag name="NEWTAG3" mes="" dispname="Булевый №2" rw="1" type="bool" cfe="0" color="b" precision="3"/>
+			<its:tag name="NEWTAG4" mes="" dispname="Булевый №1" src="TAG_BOOL1" type="bool" cfe="0" color="b" precision="3"/>
+			<its:tag name="NEWTAG2" mes="" dispname="Вещественный" mesgroup="force" src="TAG_FLOAT" type="float" zerothr="0" color="b" precision="3"><!--Калибровочная таблица-->
+				<its:sample f="20.00033335" t="100"/>
+				<its:sample f="33.33333333" t="200"/>
+			</its:tag>
+			<its:tag name="NEWTAG1" mes="" dispname="Целый" src="TAG_INT" type="int" zerothr="0" cfe="0" color="b" precision="3"/>
+			<its:tag name="NEWTAG5" mes="" dispname="Вещественный №1" mesgroup="len" src="TAG_FLOAT" type="float" zerothr="0" color="b" precision="3" rel="1"/>
+			<its:tag name="NEWTAG0" mes="" dispname="Булевый" rw="1" src="TAG_BOOL" type="bool" cfe="0" color="b" precision="3"/>
+		</its:device>
+	</its:hardware>
+	<its:test name="Новое испытание1" descr="Испытание №1"><!--переменные испытания  различие с переменными серии только в том что они отображаются в другом месте и другое время-->
+		<its:var name="VAR1" disp="Переменная №1" type="float" mes="" dir="out" inputtime="before" acc="2" default="0" mesgroup="force"/>
+		<its:var name="VAR2" disp="Переменная №2" type="float" mes="" dir="in" inputtime="after" default="0" mesgroup="force"/>
+		<its:group name="Основная">
+			<its:param name="PARA1" disp="Параметр №1" type="float" default="100"/>
+			<its:param name="PARA2" disp="Параметр №2" type="bool" default="True"/>
+		</its:group>
+		<its:group name="Дополнительная">
+			<its:param name="PARA3" disp="Параметр №3" type="date" default="12.05.2023"/>
+		</its:group>
+		<its:chart X="$TIMELINE$" name="CHART1" limit="100" title="Шыш елевый!">
+			<its:y booltrue="1.000000000000" boolfalse="0.000000000000">NEWTAG2</its:y>
+		</its:chart>
+		<its:testtag name="NEWTAG0"/>
+		<its:testtag name="NEWTAG4"/>
+		<its:testtag name="NEWTAG1"/>
+		<its:testtag name="NEWTAG2"/>
+		<its:testtag name="NEWTAG3"/>
+		<its:testtag name="NEWTAG5"/>
+		<its:script><![CDATA[uses
+    lib;
+begin
+     StartWrite;
+     try
+        while not GetTag('NEWTAG4') do
+        begin
+             SetTag('NEWTAG0',not GetTag('NEWTAG0'));
+             Sleep(500);
+        end;
+     finally
+            EndWrite;
+     end;
+end.]]></its:script>
+		<!---->
+		<its:aggregate name="AGGR1" dispname="Новый агрегат 1" color="65280" fontcolor="255"/>
+		<its:aggregate name="AGGR2" dispname="Новый агрегат 2" color="255" fontcolor="65535"/>
+		<its:task name="NEWTASK1" descr="Новая задача"><![CDATA[var
+	i:integer;
+begin
+	i:=0;
+	while i < 10 do
+	begin
+		SetTag('NEWTAG3',not GetTag('NEWTAG3'));
+		i:=i+1;
+		Sleep(500);
+	end;
+end.]]></its:task>
+		<its:dataset name="NEWDS1" dispname="Набор данных 1">
+			<its:field fieldname="FIELD2" dispname="Поле 2" datatype="float" mesgroup=""/>
+			<its:field fieldname="FIELD1" dispname="Поле 1" datatype="float" mesgroup=""/>
+		</its:dataset>
+		<its:data timeline="100">
+			<its:tag name="NEWTAG1" precision="0"/>
+			<its:tag name="NEWTAG2" precision="0"/>
+		</its:data>
+		<its:ser testcount="5">
+			<its:var name="VAR3" disp="ПерСер №1" type="float" dir="out" default="0" mesgroup="force" ro="0"/>
+			<its:var name="VAR4" disp="ПерСер №2" type="float" dir="inout" default="0" mesgroup="force" ro="0"/>
+		</its:ser>
+		<its:mplist>
+			<its:param>PARAM0</its:param>
+		</its:mplist>
+	</its:test>
+</its:machine>
